@@ -20,6 +20,9 @@ function initWallet() {
 function setSelectedAsset(asset) {
   selectedAsset = asset;
   console.log('Selected asset:', asset);
+  
+  // Navigate to the asset detail page
+  window.location.href = `asset-detail.html?symbol=${asset.symbol}`;
 }
 
 // Mock function to fetch crypto data
@@ -87,10 +90,100 @@ async function fetchCryptoData() {
       selectedAsset = cryptoAssets[0];
     }
     
+    // Update UI if we're on the dashboard page
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/' || window.location.pathname.endsWith('/')) {
+      renderAssetsList();
+      updatePortfolioValue();
+    }
+    
     return assets;
   } catch (error) {
     console.error('Error fetching crypto data:', error);
     showToast('Failed to fetch crypto data. Please try again.', 'error');
     throw error;
   }
+}
+
+// Render assets list (only on dashboard)
+function renderAssetsList() {
+  const assetsListEl = document.getElementById('assets-list');
+  if (!assetsListEl) return;
+  
+  let assetsHTML = '';
+  
+  cryptoAssets.forEach(asset => {
+    const iconClass = CONFIG.cryptoIcons[asset.symbol] || 'fa-solid fa-coins';
+    const priceChangeClass = asset.priceChange24h >= 0 ? 'positive' : 'negative';
+    
+    assetsHTML += `
+      <div class="crypto-card" data-symbol="${asset.symbol}">
+        <div class="crypto-card-header">
+          <div class="crypto-icon">
+            <i class="${iconClass}"></i>
+          </div>
+          <div class="crypto-info">
+            <h3>${asset.symbol}</h3>
+            <p>${asset.name}</p>
+          </div>
+          <div class="crypto-balance">
+            <div class="balance-amount">${formatNumber(asset.balance)}</div>
+            <div class="balance-value">${formatCurrency(asset.value)}</div>
+          </div>
+        </div>
+        <div class="crypto-card-footer">
+          <div class="crypto-price">
+            <div class="price-label">Price</div>
+            <div class="price-value">${formatCurrency(asset.price)}</div>
+          </div>
+          <div class="crypto-change ${priceChangeClass}">
+            ${formatPercentage(asset.priceChange24h)}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  assetsListEl.innerHTML = assetsHTML;
+  
+  // Add click event listeners to each card
+  document.querySelectorAll('.crypto-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const symbol = this.getAttribute('data-symbol');
+      const asset = cryptoAssets.find(a => a.symbol === symbol);
+      
+      if (asset) {
+        setSelectedAsset(asset);
+      }
+    });
+  });
+}
+
+// Update portfolio value display
+function updatePortfolioValue() {
+  const portfolioValueEl = document.getElementById('portfolio-value');
+  if (portfolioValueEl) {
+    portfolioValueEl.textContent = formatCurrency(totalPortfolioValue);
+  }
+}
+
+// Format currency for display
+function formatCurrency(value) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(value);
+}
+
+// Format number for display
+function formatNumber(value) {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 8,
+    minimumFractionDigits: 2
+  }).format(value);
+}
+
+// Format percentage for display
+function formatPercentage(value) {
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}${value.toFixed(2)}%`;
 }

@@ -1,99 +1,120 @@
 
-// Receive page specific functionality
-function loadReceivePage(container) {
-  console.log("Loading receive page...");
+// Receive page functionality
+
+// Mock wallet addresses (this would come from a real wallet API in a production app)
+const mockAddresses = {
+  BTC: "bc1q9h0nnxm5e36jgh79xnzse3xvzywlz9j5qj5ts5",
+  ETH: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+  BNB: "bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2",
+  SOL: "HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH",
+  XRP: "rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh",
+  ADA: "addr1qxck4hyalr5p4khxj5fpg7x9svdevgzh7spne5rn82unvkry3eluqmhl0xmp9xn6kqgkkfzexjmdlpxw9g8v6j9gv0lskrvc63",
+  DOGE: "DFundmtrigzA6E25Swr2pRe4Eb79bGP8G1",
+  USDT: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+  TRX: "TQrB7CEQqThMr1Xp7HsqkXZqSGnrQwKBsk",
+  TON: "UQBwzLYNR5NG5CRpHgLwUzVZBECmtKH4rGdzayuX5TwdWgnz"
+};
+
+// Initialize receive page
+function initReceivePage() {
+  console.log('Initializing receive page...');
   
-  if (!cryptoAssets.length) {
-    fetchCryptoData().then(() => loadReceivePage(container));
-    return;
+  // Get parameters from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const assetSymbol = urlParams.get('symbol') || 'BTC';
+  
+  // Set the initial selected asset
+  const selectAsset = document.getElementById('asset-select');
+  if (selectAsset) {
+    selectAsset.value = assetSymbol;
+    updateReceiveAddress(assetSymbol);
   }
   
-  // Get default asset or first in list
-  const currentAsset = selectedAsset || cryptoAssets[0];
-  
-  container.innerHTML = `
-    <div class="container mx-auto max-w-md">
-      <h1 class="text-2xl font-bold mb-6">Receive Crypto</h1>
-      
-      <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-        <div class="mb-4">
-          <label class="block text-gray-700 dark:text-gray-300 mb-2" for="asset-select">Select Asset</label>
-          <div class="relative">
-            <select id="receive-asset-select" class="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-              ${cryptoAssets.map(asset => `
-                <option value="${asset.symbol}" ${asset.symbol === currentAsset.symbol ? 'selected' : ''}>
-                  ${asset.name} (${asset.symbol})
-                </option>
-              `).join('')}
-            </select>
-            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-              <i class="fas fa-chevron-down text-gray-400"></i>
-            </div>
-          </div>
-        </div>
-        
-        <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div id="qr-code-container" class="flex justify-center mb-4">
-            <!-- QR code will be generated here -->
-            <div style="width: 200px; height: 200px; background-color: white; display: flex; align-items: center; justify-content: center;">
-              <div style="width: 80%; height: 80%; background-color: #f0f0f0;"></div>
-            </div>
-          </div>
-          
-          <div class="mb-2">
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Your ${currentAsset.name} Address:</p>
-            <div class="relative">
-              <input id="wallet-address" type="text" class="w-full p-3 pr-10 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-600 dark:text-gray-300" value="${getMockAddress(currentAsset.symbol)}" readonly>
-              <button id="copy-address-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                <i class="fas fa-copy"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-          <p>Send only ${currentAsset.symbol} to this address.</p>
-          <p>Sending any other asset may result in permanent loss.</p>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  // Add event listeners
-  setupReceivePageEvents();
+  // Set up event listeners
+  setupEventListeners();
 }
 
-// Setup events for receive page
-function setupReceivePageEvents() {
-  const assetSelect = document.getElementById('receive-asset-select');
-  const copyAddressBtn = document.getElementById('copy-address-btn');
-  const walletAddress = document.getElementById('wallet-address');
-  
-  // Update when asset selection changes
-  if (assetSelect) {
-    assetSelect.addEventListener('change', () => {
-      const symbol = assetSelect.value;
-      const address = getMockAddress(symbol);
-      
-      if (walletAddress) {
-        walletAddress.value = address;
-      }
-      
-      const asset = cryptoAssets.find(a => a.symbol === symbol);
-      if (asset) {
-        const warningText = document.querySelector('.text-center p:first-child');
-        if (warningText) {
-          warningText.textContent = `Send only ${asset.symbol} to this address.`;
-        }
-      }
+// Set up event listeners
+function setupEventListeners() {
+  // Asset selection change
+  const selectAsset = document.getElementById('asset-select');
+  if (selectAsset) {
+    selectAsset.addEventListener('change', (e) => {
+      updateReceiveAddress(e.target.value);
     });
   }
   
-  // Copy address to clipboard
-  if (copyAddressBtn && walletAddress) {
-    copyAddressBtn.addEventListener('click', () => {
-      copyToClipboard(walletAddress.value);
-      showToast('Address copied to clipboard', 'success');
-    });
+  // Copy address button
+  const copyButton = document.getElementById('copy-address');
+  if (copyButton) {
+    copyButton.addEventListener('click', copyAddressToClipboard);
   }
 }
+
+// Update receive address when asset selection changes
+function updateReceiveAddress(symbol) {
+  // Get elements
+  const addressElement = document.getElementById('wallet-address');
+  const assetIconElement = document.getElementById('asset-icon');
+  const assetNameElement = document.getElementById('asset-name');
+  
+  if (!addressElement || !assetIconElement || !assetNameElement) return;
+  
+  // Find the asset in the global assets array
+  const asset = cryptoAssets.find(a => a.symbol === symbol);
+  if (!asset) return;
+  
+  // Get the address for this asset
+  const address = mockAddresses[symbol] || 'No address available for this asset';
+  
+  // Update the UI
+  addressElement.textContent = address;
+  assetNameElement.textContent = `${asset.name} (${asset.symbol})`;
+  
+  // Update icon
+  const iconClass = CONFIG.cryptoIcons[symbol] || 'fa-solid fa-coins';
+  assetIconElement.innerHTML = `<i class="${iconClass}"></i>`;
+  
+  // Generate QR code (in a real app, this would be a proper QR code)
+  updateQrCode(address);
+}
+
+// Update QR code
+function updateQrCode(address) {
+  const qrElement = document.getElementById('qr-code');
+  if (!qrElement) return;
+  
+  // In a real app, generate an actual QR code here
+  // For now, just display a placeholder
+  qrElement.innerHTML = `
+    <div class="qr-placeholder">
+      <div class="placeholder-text">${address.substring(0, 8)}...${address.substring(address.length - 8)}</div>
+    </div>
+  `;
+}
+
+// Copy address to clipboard
+function copyAddressToClipboard() {
+  const addressElement = document.getElementById('wallet-address');
+  if (!addressElement) return;
+  
+  const address = addressElement.textContent;
+  
+  // Create a temporary input element
+  const tempInput = document.createElement('input');
+  tempInput.value = address;
+  document.body.appendChild(tempInput);
+  
+  // Select and copy the text
+  tempInput.select();
+  document.execCommand('copy');
+  
+  // Remove the temporary input
+  document.body.removeChild(tempInput);
+  
+  // Show success message
+  showToast('Address copied to clipboard', 'success');
+}
+
+// Initialize the page when DOM is loaded
+document.addEventListener('DOMContentLoaded', initReceivePage);

@@ -111,3 +111,320 @@
     background-position: right -40px top 0;
   }
 }
+
+/* Asset Detail Page Styles */
+.asset-detail-container {
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.asset-detail-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  top: 1rem;
+}
+
+.back-button a {
+  color: inherit;
+  font-size: 1.25rem;
+}
+
+.asset-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+  background-color: rgba(108, 93, 211, 0.1);
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-detail-header h1 {
+  font-size: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.asset-price {
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.current-price {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.price-change {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+}
+
+.price-change.positive {
+  background-color: rgba(72, 218, 137, 0.1);
+  color: #48DA89;
+}
+
+.price-change.negative {
+  background-color: rgba(255, 117, 76, 0.1);
+  color: #FF754C;
+}
+
+.asset-balance {
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.asset-balance h2 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+  opacity: 0.9;
+}
+
+.balance-amount {
+  display: flex;
+  flex-direction: column;
+}
+
+.token-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.fiat-value {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.asset-actions {
+  display: flex;
+  justify-content: space-between;
+  margin: 1.5rem 0;
+}
+
+.action-button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem 0.5rem;
+  border-radius: 0.75rem;
+  background-color: #f7f7f7;
+  margin: 0 0.5rem;
+  transition: all 0.2s;
+}
+
+.dark .action-button {
+  background-color: #2d3748;
+}
+
+.action-button:first-child {
+  margin-left: 0;
+}
+
+.action-button:last-child {
+  margin-right: 0;
+}
+
+.action-button:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.action-button i {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-navigation::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #718096;
+  position: relative;
+  white-space: nowrap;
+}
+
+.tab-button.active {
+  color: var(--color-primary);
+}
+
+.tab-button.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Chart styles */
+.price-chart {
+  border-radius: 1rem;
+  padding: 1rem;
+  background-color: #f7f7f7;
+}
+
+.dark .price-chart {
+  background-color: #2d3748;
+}
+
+.chart-periods {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.period-button {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+}
+
+.period-button.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.chart-placeholder {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+}
+
+.dark .chart-placeholder {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Transaction history */
+.transaction-history {
+  margin-top: 1rem;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dark .transaction-item {
+  border-bottom-color: #4a5568;
+}
+
+.tx-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.tx-icon.receive {
+  background-color: rgba(72, 218, 137, 0.1);
+  color: #48DA89;
+}
+
+.tx-icon.send {
+  background-color: rgba(255, 117, 76, 0.1);
+  color: #FF754C;
+}
+
+.tx-details {
+  flex: 1;
+}
+
+.tx-title {
+  font-weight: 500;
+}
+
+.tx-date {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.tx-amount {
+  font-weight: 600;
+}
+
+.tx-amount.positive {
+  color: #48DA89;
+}
+
+.tx-amount.negative {
+  color: #FF754C;
+}
+
+.no-transactions {
+  text-align: center;
+  padding: 2rem 0;
+  color: #718096;
+}
+
+/* Add these asset card hover styles to make them appear clickable */
+.crypto-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.crypto-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
