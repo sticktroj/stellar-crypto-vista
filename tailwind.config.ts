@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,19 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				wallet: {
+					dark: '#1E1D2B',
+					darker: '#141325',
+					light: '#F8F9FA',
+					'light-accent': '#EAECEF',
+					accent: '#6C5DD3',
+					green: '#32D74B',
+					red: '#FF3B30',
+					btc: '#F7931A',
+					eth: '#627EEA',
+					eos: '#3C5DFD',
+					usdt: '#26A17B'
 				}
 			},
 			borderRadius: {
@@ -84,11 +98,32 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0'
+					},
+					'100%': {
+						opacity: '1'
+					}
+				},
+				'pulse-subtle': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.8'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-in-out',
+				'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite'
+			},
+			backgroundImage: {
+				'gradient-purple': 'linear-gradient(135deg, #6C5DD3 0%, #9E6DFF 100%)',
 			}
 		}
 	},
