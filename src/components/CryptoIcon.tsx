@@ -1,7 +1,7 @@
 
 import { 
   Bitcoin, 
-  CircleDollarSign, 
+  Ethereum, 
   DollarSign, 
   Coins, 
   BarChart4, 
@@ -27,7 +27,7 @@ export function CryptoIcon({ symbol, size = 24, className }: CryptoIconProps) {
       iconColor = "text-wallet-btc";
       break;
     case 'eth':
-      IconComponent = CircleDollarSign; // Replaced Ethereum with CircleDollarSign
+      IconComponent = Ethereum;
       iconColor = "text-wallet-eth";
       break;
     case 'usdt':
