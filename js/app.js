@@ -11,6 +11,4 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initialize navigation
   initNavigation();
-  
-  console.log("App initialized successfully!");
 });

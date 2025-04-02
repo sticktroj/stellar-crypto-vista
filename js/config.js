@@ -42,10 +42,5 @@ const CONFIG = {
     USDT: 'fa-solid fa-dollar-sign',
     TRX: 'fa-solid fa-coins',
     TON: 'fa-solid fa-coins'
-  },
-  // Primary color for the application
-  primaryColor: '#6C5DD3'
+  }
 };
-
-// Add a CSS variable for the primary color
-document.documentElement.style.setProperty('--color-primary', CONFIG.primaryColor);

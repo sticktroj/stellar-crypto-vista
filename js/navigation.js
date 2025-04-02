@@ -14,7 +14,6 @@ let currentPage = 'dashboard';
 
 // Initialize navigation
 function initNavigation() {
-  console.log("Initializing navigation...");
   createNavItems();
   navigateTo(getInitialPage());
   

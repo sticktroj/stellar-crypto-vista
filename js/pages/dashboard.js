@@ -1,99 +1,140 @@
 
-// Dashboard page specific functionality
+// Dashboard page functionality
+
+let portfolioChart = null;
+
+// Load dashboard page content
 function loadDashboardPage(container) {
-  console.log("Loading dashboard page...");
-  
-  // Create dashboard page content
   container.innerHTML = `
     <div class="container mx-auto max-w-4xl">
       <div class="mb-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Portfolio</h1>
-        <button id="refresh-btn" class="px-4 py-2 border rounded-md flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700">
-          <i class="fas fa-sync-alt"></i>
-          <span>Refresh</span>
+        <h1 class="text-2xl font-bold dark:text-white">Portfolio</h1>
+        <button id="refresh-data" class="btn-outline flex items-center">
+          <i class="fas fa-sync-alt mr-2"></i>
+          Refresh
         </button>
       </div>
       
-      <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-        <div class="chart-container relative" style="height: 300px;">
-          <canvas id="portfolio-chart"></canvas>
-          <div class="portfolio-value absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Total Balance</p>
-            <h2 class="text-2xl font-bold" id="total-portfolio-value">$0.00</h2>
-          </div>
+      <div class="mb-8 relative" style="height: 300px;">
+        <canvas id="portfolio-chart"></canvas>
+        <div class="portfolio-value">
+          <h2 class="text-sm text-muted-foreground">PORTFOLIO VALUE</h2>
+          <p class="font-bold text-2xl" id="total-balance">${isLoading ? createSkeleton('120px', '30px') : formatCurrency(totalPortfolioValue)}</p>
         </div>
       </div>
       
-      <h2 class="text-xl font-bold mb-4">Your Assets</h2>
-      <div id="assets-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Assets will be loaded here -->
-        <div class="skeleton h-24 rounded-lg"></div>
-        <div class="skeleton h-24 rounded-lg"></div>
-        <div class="skeleton h-24 rounded-lg"></div>
-        <div class="skeleton h-24 rounded-lg"></div>
+      <h2 class="text-xl font-bold mb-4 dark:text-white">Your Assets</h2>
+      <div id="asset-list" class="space-y-4">
+        ${isLoading ? generateAssetSkeletons() : generateAssetList()}
       </div>
     </div>
   `;
   
   // Add event listeners
-  const refreshBtn = document.getElementById('refresh-btn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', async () => {
-      refreshBtn.disabled = true;
-      refreshBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Refreshing...';
-      
-      try {
-        await fetchCryptoData();
-        showToast('Portfolio data updated successfully', 'success');
-      } catch (error) {
-        console.error('Error refreshing data:', error);
-        showToast('Failed to refresh data. Please try again.', 'error');
-      } finally {
-        refreshBtn.disabled = false;
-        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-      }
-    });
+  const refreshButton = document.getElementById('refresh-data');
+  if (refreshButton) {
+    refreshButton.addEventListener('click', handleRefreshData);
   }
   
-  // Initialize data
-  fetchCryptoData().then(() => {
-    renderDashboard();
-  });
+  // Initialize chart after DOM is updated
+  setTimeout(() => {
+    initPortfolioChart();
+    
+    // Add click handlers to asset cards
+    addAssetCardHandlers();
+  }, 0);
 }
 
-// Render dashboard with data
-function renderDashboard() {
-  renderPortfolioChart();
-  renderAssetsList();
-  updateTotalPortfolioValue();
+// Generate skeleton loaders for assets
+function generateAssetSkeletons() {
+  let skeletons = '';
+  for (let i = 0; i < 4; i++) {
+    skeletons += `
+      <div class="crypto-card p-4">
+        <div class="flex items-center gap-3">
+          ${createSkeleton('40px', '40px', 'rounded-xl')}
+          <div>
+            ${createSkeleton('80px', '20px')}
+            ${createSkeleton('100px', '16px', 'mt-1')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  return skeletons;
 }
 
-// Function to render the portfolio chart
-function renderPortfolioChart() {
-  const ctx = document.getElementById('portfolio-chart');
-  if (!ctx || !cryptoAssets.length) return;
+// Generate asset list HTML
+function generateAssetList() {
+  if (!cryptoAssets.length) return '<p>No assets found</p>';
   
-  // Extract data for chart
+  return cryptoAssets.map(asset => {
+    const isSelected = selectedAsset && selectedAsset.symbol === asset.symbol;
+    return `
+      <div class="crypto-card p-4 cursor-pointer ${isSelected ? 'asset-selected' : ''}" data-asset="${asset.symbol}">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            ${createCryptoIcon(asset.symbol)}
+            <div>
+              <h3 class="font-bold dark:text-white">${asset.symbol}</h3>
+              <p class="text-sm text-muted-foreground">${asset.name}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-bold dark:text-white">${formatNumber(asset.balance)}</p>
+            <p class="text-sm text-muted-foreground">${formatCurrency(asset.value)}</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center justify-between mt-4">
+          <div>
+            <p class="text-sm text-muted-foreground">Price</p>
+            <p class="font-medium dark:text-white">${formatCurrency(asset.price)}</p>
+          </div>
+          <div class="${asset.priceChange24h >= 0 ? "text-positive" : "text-negative"}">
+            ${formatPercentage(asset.priceChange24h)}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Initialize portfolio chart
+function initPortfolioChart() {
+  const chartCanvas = document.getElementById('portfolio-chart');
+  if (!chartCanvas || isLoading || !cryptoAssets.length) return;
+  
+  // Destroy existing chart if it exists
+  if (portfolioChart) {
+    portfolioChart.destroy();
+  }
+  
+  // Prepare data for chart
   const labels = cryptoAssets.map(asset => asset.symbol);
   const data = cryptoAssets.map(asset => asset.value);
-  const backgroundColors = [
-    '#6C5DD3', '#7A6AEE', '#FF754C', '#FFA94C', '#2EB8E6',
-    '#48DA89', '#FFEC45', '#EC45FF', '#7645FF', '#F3BA2F'
+  const backgroundColor = [
+    '#6C5DD3', '#F7931A', '#627EEA', '#3C5DFD', '#26A17B', 
+    '#2775CA', '#E84142', '#0095D9', '#8247E5', '#E6007A'
   ];
   
   // Create chart
-  const chartConfig = {
+  portfolioChart = new Chart(chartCanvas, {
     type: 'doughnut',
     data: {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: backgroundColors,
-        borderWidth: 0
+        backgroundColor: backgroundColor,
+        borderColor: document.documentElement.classList.contains('dark') ? '#111827' : '#ffffff',
+        borderWidth: 2,
+        hoverOffset: 4
       }]
     },
     options: {
       cutout: '70%',
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           display: false
@@ -102,77 +143,80 @@ function renderPortfolioChart() {
           callbacks: {
             label: function(context) {
               const value = context.raw;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = ((value / total) * 100).toFixed(1);
+              const percentage = (value / totalPortfolioValue * 100).toFixed(2);
               return `${context.label}: ${formatCurrency(value)} (${percentage}%)`;
             }
           }
         }
-      },
-      responsive: true,
-      maintainAspectRatio: false
+      }
     }
-  };
-  
-  // Check if Chart is already initialized
-  if (window.portfolioChart) {
-    window.portfolioChart.destroy();
-  }
-  
-  // Create new chart
-  window.portfolioChart = new Chart(ctx, chartConfig);
-}
-
-// Function to render the assets list
-function renderAssetsList() {
-  const container = document.getElementById('assets-container');
-  if (!container || !cryptoAssets.length) return;
-  
-  container.innerHTML = '';
-  
-  cryptoAssets.forEach(asset => {
-    const assetCard = document.createElement('div');
-    assetCard.className = 'crypto-card flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow';
-    assetCard.dataset.id = asset.id;
-    
-    const priceChangeClass = asset.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500';
-    const priceChangeIcon = asset.priceChange24h >= 0 ? 'fa-caret-up' : 'fa-caret-down';
-    
-    assetCard.innerHTML = `
-      <div class="flex items-center">
-        <div class="crypto-icon mr-4">
-          <i class="${CONFIG.cryptoIcons[asset.symbol]}"></i>
-        </div>
-        <div>
-          <h3 class="font-medium">${asset.name}</h3>
-          <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
-            <span>${asset.symbol}</span>
-            <span class="mx-2">•</span>
-            <span class="${priceChangeClass}">
-              <i class="fas ${priceChangeIcon}"></i>
-              ${Math.abs(asset.priceChange24h).toFixed(2)}%
-            </span>
-          </div>
-        </div>
-      </div>
-      <div class="text-right">
-        <div class="font-medium">${asset.balance.toFixed(4)} ${asset.symbol}</div>
-        <div class="text-gray-500 dark:text-gray-400">${formatCurrency(asset.value)}</div>
-      </div>
-    `;
-    
-    assetCard.addEventListener('click', () => {
-      setSelectedAsset(asset);
-    });
-    
-    container.appendChild(assetCard);
   });
 }
 
-// Update total portfolio value display
-function updateTotalPortfolioValue() {
-  const valueElement = document.getElementById('total-portfolio-value');
-  if (valueElement) {
-    valueElement.textContent = formatCurrency(totalPortfolioValue);
+// Add click handlers to asset cards
+function addAssetCardHandlers() {
+  const assetCards = document.querySelectorAll('[data-asset]');
+  assetCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const symbol = card.dataset.asset;
+      setSelectedAsset(symbol);
+    });
+  });
+}
+
+// Handle refresh data button click
+function handleRefreshData() {
+  const button = document.getElementById('refresh-data');
+  if (button) {
+    // Add spinning animation to button
+    const icon = button.querySelector('i');
+    if (icon) {
+      icon.classList.add('fa-spin');
+    }
+    button.disabled = true;
+    
+    // Refresh data
+    fetchCryptoData().then(() => {
+      // Remove spinning animation
+      if (icon) {
+        icon.classList.remove('fa-spin');
+      }
+      button.disabled = false;
+      
+      // Show success message
+      showToast('Portfolio data updated', 'success');
+    }).catch(error => {
+      // Remove spinning animation
+      if (icon) {
+        icon.classList.remove('fa-spin');
+      }
+      button.disabled = false;
+      
+      // Show error message
+      showToast('Failed to update portfolio data', 'error');
+    });
   }
+}
+
+// Update UI for dashboard page
+function currentPageUpdateUI() {
+  if (currentPage !== 'dashboard') return;
+  
+  // Update total balance
+  const totalBalanceElement = document.getElementById('total-balance');
+  if (totalBalanceElement) {
+    totalBalanceElement.textContent = formatCurrency(totalPortfolioValue);
+  }
+  
+  // Update asset list
+  const assetListElement = document.getElementById('asset-list');
+  if (assetListElement) {
+    assetListElement.innerHTML = isLoading ? generateAssetSkeletons() : generateAssetList();
+    
+    // Re-add click handlers
+    addAssetCardHandlers();
+  }
+  
+  // Update chart
+  initPortfolioChart();
 }

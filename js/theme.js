@@ -1,10 +1,10 @@
 
-// Theme functionality
+// Theme management functionality
 
-// Get initial theme from local storage or system preference
+// Check if user prefers dark mode
 function getInitialTheme() {
+  // Check local storage
   const savedTheme = localStorage.getItem('theme');
-  
   if (savedTheme) {
     return savedTheme;
   }
@@ -21,27 +21,44 @@ function applyTheme(theme) {
     document.documentElement.classList.remove('dark');
   }
   
-  // Save theme preference
+  // Save to local storage
   localStorage.setItem('theme', theme);
   
   // Update theme toggle button
   updateThemeToggleButton();
 }
 
-// Toggle between light and dark theme
+// Update theme toggle button appearance
+function updateThemeToggleButton() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const moonIcon = document.querySelector('#theme-toggle .fa-moon');
+  const sunIcon = document.querySelector('#theme-toggle .fa-sun');
+  
+  if (moonIcon && sunIcon) {
+    if (isDark) {
+      moonIcon.classList.add('hidden');
+      sunIcon.classList.remove('hidden');
+    } else {
+      moonIcon.classList.remove('hidden');
+      sunIcon.classList.add('hidden');
+    }
+  }
+}
+
+// Toggle theme
 function toggleTheme() {
   const isDark = document.documentElement.classList.contains('dark');
   applyTheme(isDark ? 'light' : 'dark');
 }
 
-// Update theme toggle button appearance
-function updateThemeToggleButton() {
-  const themeToggleBtn = document.getElementById('theme-toggle');
-  if (!themeToggleBtn) return;
+// Initialize theme
+document.addEventListener('DOMContentLoaded', () => {
+  // Apply initial theme
+  applyTheme(getInitialTheme());
   
-  // Add click event listener if not already added
-  if (!themeToggleBtn.hasAttribute('data-initialized')) {
-    themeToggleBtn.addEventListener('click', toggleTheme);
-    themeToggleBtn.setAttribute('data-initialized', 'true');
+  // Set up theme toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
   }
-}
+});

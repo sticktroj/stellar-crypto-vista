@@ -1,169 +1,138 @@
 
-// Utility functions
+// Common utility functions
+
+// Format number with commas
+function formatNumber(number, decimals = 2) {
+  return number.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
 
 // Format currency
-function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(number, currency = 'USD', decimals = 2) {
+  return number.toLocaleString('en-US', {
     style: 'currency',
-    currency: CONFIG.defaultFiat || 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value);
+    currency: currency,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
 }
 
-// Generate a mock address for a cryptocurrency
-function getMockAddress(symbol) {
-  const addressPrefixes = {
-    BTC: '1',
-    ETH: '0x',
-    BNB: 'bnb',
-    SOL: 'sol',
-    XRP: 'r',
-    ADA: 'addr',
-    DOGE: 'D',
-    USDT: '0x',
-    TRX: 'T',
-    TON: 'EQ'
-  };
-  
-  const prefix = addressPrefixes[symbol] || '';
-  const randomChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let address = prefix;
-  
-  // Generate random characters
-  const length = symbol === 'ETH' || symbol === 'USDT' ? 40 : 26;
-  for (let i = 0; i < length; i++) {
-    address += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
-  }
-  
-  return address;
-}
-
-// Copy to clipboard
-function copyToClipboard(text) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text);
-  } else {
-    // Fallback for older browsers
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-  }
+// Format percentage
+function formatPercentage(number, decimals = 2) {
+  return number.toLocaleString('en-US', {
+    style: 'percent',
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
 }
 
 // Truncate text with ellipsis
 function truncateText(text, maxLength) {
   if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength - 3) + '...';
+  return text.substring(0, maxLength) + '...';
 }
 
-// Create a simple QR code placeholder (for demo purposes)
-function createQRCodePlaceholder(containerId, data) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  
-  // Clear container
-  container.innerHTML = '';
-  
-  // Create a placeholder QR code
-  const qrCode = document.createElement('div');
-  qrCode.className = 'qr-code';
-  qrCode.style.width = '200px';
-  qrCode.style.height = '200px';
-  qrCode.style.backgroundColor = '#FFFFFF';
-  qrCode.style.display = 'flex';
-  qrCode.style.alignItems = 'center';
-  qrCode.style.justifyContent = 'center';
-  qrCode.style.position = 'relative';
-  
-  // Add QR code pattern placeholder
-  const pattern = document.createElement('div');
-  pattern.style.width = '80%';
-  pattern.style.height = '80%';
-  pattern.style.backgroundImage = 'linear-gradient(to right, #ddd 1px, transparent 1px), linear-gradient(to bottom, #ddd 1px, transparent 1px)';
-  pattern.style.backgroundSize = '10px 10px';
-  
-  // Add corner squares
-  const corners = ['top-left', 'top-right', 'bottom-left'];
-  corners.forEach(position => {
-    const corner = document.createElement('div');
-    corner.style.position = 'absolute';
-    corner.style.width = '30px';
-    corner.style.height = '30px';
-    corner.style.backgroundColor = '#000';
-    
-    if (position === 'top-left') {
-      corner.style.top = '20px';
-      corner.style.left = '20px';
-    } else if (position === 'top-right') {
-      corner.style.top = '20px';
-      corner.style.right = '20px';
-    } else if (position === 'bottom-left') {
-      corner.style.bottom = '20px';
-      corner.style.left = '20px';
-    }
-    
-    const innerCorner = document.createElement('div');
-    innerCorner.style.position = 'absolute';
-    innerCorner.style.top = '5px';
-    innerCorner.style.left = '5px';
-    innerCorner.style.width = '20px';
-    innerCorner.style.height = '20px';
-    innerCorner.style.backgroundColor = '#fff';
-    
-    corner.appendChild(innerCorner);
-    qrCode.appendChild(corner);
-  });
-  
-  qrCode.appendChild(pattern);
-  container.appendChild(qrCode);
+// Copy text to clipboard
+function copyToClipboard(text) {
+  const tempInput = document.createElement('input');
+  tempInput.value = text;
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  document.execCommand('copy');
+  document.body.removeChild(tempInput);
 }
 
 // Show toast notification
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', duration = 3000) {
   // Create toast container if it doesn't exist
-  let toastContainer = document.querySelector('.toast-container');
+  let toastContainer = document.getElementById('toast-container');
   if (!toastContainer) {
     toastContainer = document.createElement('div');
-    toastContainer.className = 'toast-container';
+    toastContainer.id = 'toast-container';
+    toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col gap-2';
     document.body.appendChild(toastContainer);
   }
   
-  // Create toast
+  // Create toast element
   const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
+  toast.className = `py-2 px-4 rounded-md shadow-md transform transition-all duration-300 translate-x-full opacity-0 `;
   
-  // Create icon based on type
-  let icon = '';
-  if (type === 'success') {
-    icon = '<i class="fas fa-check-circle mr-2"></i>';
-  } else if (type === 'error') {
-    icon = '<i class="fas fa-exclamation-circle mr-2"></i>';
-  } else if (type === 'info') {
-    icon = '<i class="fas fa-info-circle mr-2"></i>';
+  // Add type-specific styling
+  switch (type) {
+    case 'success':
+      toast.classList.add('bg-green-500', 'text-white');
+      break;
+    case 'error':
+      toast.classList.add('bg-red-500', 'text-white');
+      break;
+    case 'warning':
+      toast.classList.add('bg-yellow-500', 'text-white');
+      break;
+    default:
+      toast.classList.add('bg-blue-500', 'text-white');
   }
   
-  // Set toast content
-  toast.innerHTML = `${icon}<div>${message}</div>`;
-  
-  // Add to container
+  toast.innerText = message;
   toastContainer.appendChild(toast);
   
-  // Automatically remove after 3 seconds
+  // Animate in
   setTimeout(() => {
-    toast.style.animation = 'slideOut 0.3s ease-in forwards';
+    toast.classList.replace('translate-x-full', 'translate-x-0');
+    toast.classList.replace('opacity-0', 'opacity-100');
+  }, 10);
+  
+  // Animate out and remove after duration
+  setTimeout(() => {
+    toast.classList.replace('translate-x-0', 'translate-x-full');
+    toast.classList.replace('opacity-100', 'opacity-0');
     
-    // Remove from DOM after animation
     setTimeout(() => {
       toastContainer.removeChild(toast);
-      
-      // Remove container if no more toasts
-      if (toastContainer.children.length === 0) {
-        document.body.removeChild(toastContainer);
-      }
     }, 300);
-  }, 3000);
+  }, duration);
+}
+
+// Generate a random hash-like string
+function generateRandomHash(length = 40) {
+  const characters = 'abcdef0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+
+// Create a QR code placeholder (in a real app, this would generate an actual QR code)
+function createQRCodePlaceholder(containerId, text) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  container.innerHTML = `
+    <div class="border-4 border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-center">
+      <div class="text-center">
+        <div class="grid grid-cols-10 gap-1 w-48 h-48 mx-auto">
+          ${Array(100).fill().map(() => 
+            `<div class="bg-gray-800 dark:bg-gray-200 rounded-sm w-full h-full ${Math.random() > 0.7 ? 'opacity-100' : 'opacity-0'}"></div>`
+          ).join('')}
+        </div>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">QR Code for ${truncateText(text, 20)}</p>
+      </div>
+    </div>
+  `;
+}
+
+// Add page-specific JavaScript files
+function loadPageScripts() {
+  const page = currentPage || 'dashboard';
+  const scriptSrc = `js/pages/${page}.js`;
+  
+  // Check if script is already loaded
+  const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);
+  if (!existingScript) {
+    const script = document.createElement('script');
+    script.src = scriptSrc;
+    document.body.appendChild(script);
+  }
 }
